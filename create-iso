@@ -48,7 +48,7 @@ function fetch_iso() {
     echo "  Verifying signed checksum $ISO_CHECKSUM"
     gpg --verify $ISO_DIR/$ISO_CHECKSUM
     
-    CHECKSUM=$(grep $ISO_NAME $ISO_DIR/$ISO_CHECKSUM | cut -f1 -d' ')
+    CHECKSUM=$(grep $ISO_NAME $ISO_DIR/$ISO_CHECKSUM | cut -f4 -d' ')
     
     if [[ $(sha256sum $ISO_DIR/$ISO | cut -f1 -d' ') == "$CHECKSUM" ]]; then
         echo "  Checksums match, using local copy of $ISO"

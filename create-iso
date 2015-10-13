@@ -13,7 +13,7 @@ ISO_DIR=/data/fetched-fedora-iso
 ISO_FILENAME=./fedora-22-joyent.iso
 KS_CFG=./ks.cfg
 GUESTTOOLS=sdc-vmtools
-MIRROR=https://download.fedoraproject.org/pub/fedora/linux/releases/22/Server/x86_64/iso
+MIRROR=http://fedora.bhs.mirrors.ovh.net/linux/releases/22/Server/x86_64/iso
 MOUNT_POINT=/mnt/fedora22
 
 function fetch_iso() {

@@ -3,8 +3,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-https://download.fedoraproject.org/pub/fedora/linux/releases/22/Server/x86_64/iso/
-
 CUR_TIME=`date +%FT%TZ`
 CUSTOM_RPMS=./RPMS
 DVD_LAYOUT=/data/fedora-22-iso-layout

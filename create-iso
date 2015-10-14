@@ -21,7 +21,7 @@ function fetch_iso() {
     fi
     
     if [ ! -e $ISO_DIR/$ISO ]; then
-        echo "No local copy of $ISO. Fetching latest $ISO"
+        echo "==> No local copy of $ISO. Fetching latest $ISO"
         curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
     fi
     
@@ -33,29 +33,29 @@ function fetch_iso() {
     set +e 
     gpg --list-keys | grep 4096R/8E1431D5 > /dev/null
     if [[ $? -gt 0 ]]; then
-        echo "Adding gpg signing keys"
+        echo "==> Adding gpg signing keys"
         gpg --keyserver pool.sks-keyservers.net --recv-keys C527EA07A9349B589C35E1BF11ADC0948E1431D5
     fi
     set -e
     
-    echo "Checking to see if we have the latest $ISO:"
-    echo "  Getting signed checksum ($ISO_CHECKSUM)"
+    echo "==> Checking to see if we have the latest $ISO:"
+    echo "===> Getting signed checksum ($ISO_CHECKSUM)"
     curl -s -o $ISO_DIR/$ISO_CHECKSUM $MIRROR/$ISO_CHECKSUM
     
     ISO_NAME=$(echo $ISO | cut -f1 -d'.')
     
-    echo "  Verifying signed checksum $ISO_CHECKSUM"
+    echo "===> Verifying signed checksum $ISO_CHECKSUM"
     gpg --verify $ISO_DIR/$ISO_CHECKSUM
     
     CHECKSUM=$(grep $ISO_NAME $ISO_DIR/$ISO_CHECKSUM | cut -f4 -d' ')
     
     if [[ $(sha256sum $ISO_DIR/$ISO | cut -f1 -d' ') == "$CHECKSUM" ]]; then
-        echo "  Checksums match, using local copy of $ISO"
+        echo "===> Checksums match, using local copy of $ISO"
     else
-        echo "  Checksums do not match. Fetching latest $ISO"
+        echo "===> Checksums do not match. Fetching latest $ISO"
         curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
         
-        echo "  Verifying sha256 of $ISO"
+        echo "===> Verifying sha256 of $ISO"
         pushd $PWD
         cd $ISO_DIR
         grep "$ISO\$" $ISO_CHECKSUM | sha256sum -c -
@@ -64,44 +64,44 @@ function fetch_iso() {
 }
 
 function create_layout() {
-    echo "Creating ISO Layout"
+    echo "==> Creating ISO Layout"
     if [ -d $DVD_LAYOUT ]; then
-        echo "Layout $DVD_LAYOUT exists...nuking"
+        echo "==> Layout $DVD_LAYOUT exists, deleting..."
         rm -rf $DVD_LAYOUT
     fi
-    echo "Creating $DVD_LAYOUT"
+    echo "==> Creating $DVD_LAYOUT"
     mkdir -p $DVD_LAYOUT
 
     # Check if $MOUNT_POINT is already mounted
     # This may happen if a previous build failed
     if [ $(grep $MOUNT_POINT /proc/mounts) ]; then
-      echo "Unmounting $MOUNT_POINT from previous build..."
+      echo "===> Unmounting $MOUNT_POINT from previous build..."
         umount $MOUNT_POINT
     fi
 
-    echo "Mounting $ISO to $MOUNT_POINT"
+    echo "==> Mounting $ISO to $MOUNT_POINT"
     if [ ! -d $MOUNT_POINT ]; then
-        echo "Creating $MOUNT_POINT..."
+        echo "===> Creating $MOUNT_POINT..."
         mkdir $MOUNT_POINT
     fi
     mount $ISO_DIR/$ISO $MOUNT_POINT -o loop
     pushd $MOUNT_POINT > /dev/null 2>&1
-    echo "Populating Layout"
+    echo "==> Populating Layout"
     tar cf - . | tar xpf - -C $DVD_LAYOUT
     popd > /dev/null 2>&1
     umount $MOUNT_POINT
     
-    echo "Finished Populating Layout"
+    echo "==> Finished Populating Layout"
 }
 
 function copy_ks_cfg() {
-    echo "Copying Kickstart file"
+    echo "==> Copying Kickstart file"
     cp $KS_CFG $DVD_LAYOUT/
 }
 
 function copy_guest_tools() {
-    echo "Copying $GUESTTOOLS"
-    echo "Initiallizing and fetching submodule $GUESTTOOLS"
+    echo "==> Copying $GUESTTOOLS"
+    echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
     git submodule init
     git submodule update
     cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
@@ -109,12 +109,12 @@ function copy_guest_tools() {
 
 
 function modify_boot_menu() {
-    echo "Modifying grub boot menu"
+    echo "==> Modifying grub boot menu"
     cp ./isolinux.cfg $DVD_LAYOUT/isolinux/
 }
 
 function cleanup_layout() {
-    echo "Cleaning up $DVD_LAYOUT"
+    echo "==> Cleaning up $DVD_LAYOUT"
     find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
 }
 
@@ -123,21 +123,21 @@ function create_newiso() {
     cleanup_layout
     copy_ks_cfg
     modify_boot_menu
-    echo "Preparing NEW ISO"
+    echo "==> Preparing NEW ISO"
     pushd $DVD_LAYOUT > /dev/null 2>&1
     discinfo=`head -1 .discinfo`
-    echo "Creating NEW ISO"
+    echo "==> Creating NEW ISO"
     mkisofs -r -R -J -T -v \
      -no-emul-boot -boot-load-size 4 -boot-info-table \
      -V "$DVD_TITLE" -p "Joyent" \
      -A "$DVD_TITLE - $CUR_TIME" \
      -b isolinux/isolinux.bin -c isolinux/boot.cat \
      -x "lost+found" -o $ISO_FILENAME $DVD_LAYOUT
-    echo "Fixing up NEW ISO"
+    echo "==> Fixing up NEW ISO"
     echo implantisomd5 $ISO_FILENAME
     implantisomd5 $ISO_FILENAME
     popd > /dev/null 2>&1
-    echo "NEW ISO $ISO_FILENAME is ready"
+    echo "==> NEW ISO $ISO_FILENAME is ready"
 }
 
 # main line

@@ -85,10 +85,9 @@ function create_layout() {
         mkdir $MOUNT_POINT
     fi
     mount $ISO_DIR/$ISO $MOUNT_POINT -o loop
-    pushd $MOUNT_POINT > /dev/null 2>&1
-    echo "==> Populating Layout"
-    tar cf - . | tar xpf - -C $DVD_LAYOUT
-    popd > /dev/null 2>&1
+    
+    cp -a $MOUNT_POINT/* $DVD_LAYOUT
+
     umount $MOUNT_POINT
     
     echo "==> Finished Populating Layout"

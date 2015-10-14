@@ -123,9 +123,7 @@ function create_newiso() {
     copy_ks_cfg
     modify_boot_menu
     echo "==> Preparing NEW ISO"
-    echo "===> Getting ISO LABEL"
-    LABEL=$(file $ISO_DIR/$ISO | cut -f2 -d"'")
-    echo "===> LABEL is $LABEL"
+
     pushd $DVD_LAYOUT > /dev/null 2>&1
     
     echo "==> Creating NEW ISO"

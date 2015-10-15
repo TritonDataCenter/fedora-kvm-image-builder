@@ -59,14 +59,13 @@ SmartOS and the Joyent Public Cloud.
 * SELinux is set to permissive
 * Timezone is set to UTC
 * Disk is 10GB in size
-
-
-* @core
-* man
-* net-tools
-* ntp
-* ntpdate
-* parted
-* vim-enhanced
-* vim-minimal
-* wget
+* Default packages installed
+    * @core
+    * man
+    * net-tools
+    * ntp
+    * ntpdate
+    * parted
+    * vim-enhanced
+    * vim-minimal
+    * wget

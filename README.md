@@ -58,20 +58,15 @@ SmartOS and the Joyent Public Cloud.
 * Firstboot disabled
 * SELinux is set to permissive
 * Timezone is set to UTC
-* Disk is 10GB in size (8GB for / and the rest for swap)
-* Default packages installed (me-centos
-is from [https://github.com/joyent/me-centos](https://github.com/joyent/me-centos))
+* Disk is 10GB in size
 
 
-   * @core
-   * acpid
-   * iputils
-   * man
-   * me-centos
-   * ntp
-   * ntpdate
-   * parted
-   * vim-common
-   * vim-enhanced
-   * vim-minimal
-   * wget
+* @core
+* man
+* net-tools
+* ntp
+* ntpdate
+* parted
+* vim-enhanced
+* vim-minimal
+* wget

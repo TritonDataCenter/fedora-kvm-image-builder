@@ -3,7 +3,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-CUR_TIME=`date +%FT%TZ`
+CUR_TIME=$(date +%FT%TZ)
 DVD_LAYOUT=/data/fedora-22-iso-layout
 DVD_TITLE='Fedora-22-Joyent'
 ISO=Fedora-Server-netinst-x86_64-22.iso

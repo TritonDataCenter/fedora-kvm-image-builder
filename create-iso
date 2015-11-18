@@ -116,11 +116,6 @@ if [[ -z ${DVD_LAYOUT} ]]; then
   exit 1
 fi
 
-if [[ ! -d ${DVD_LAYOUT} ]]; then
-  echo "Error: DVD layout directory (${DVD_LAYOUT}) does not exist"
-  exit 1
-fi
-
 if [[ -z ${DVD_TITLE} ]]; then
   echo "Error: missing DVD title (-t) value"
   exit 1

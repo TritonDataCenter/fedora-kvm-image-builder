@@ -4,16 +4,138 @@ set -euo pipefail
 IFS=$'\n\t'
 
 CUR_TIME=$(date +%FT%TZ)
-DVD_LAYOUT=/data/fedora-22-iso-layout
-DVD_TITLE='Fedora-22-Joyent'
-ISO=Fedora-Server-netinst-x86_64-22.iso
-ISO_CHECKSUM=Fedora-Server-22-x86_64-CHECKSUM
-ISO_DIR=/data/fetched-fedora-iso
-ISO_FILENAME=./fedora-22-joyent.iso
 KS_CFG=./ks.cfg
 GUESTTOOLS=sdc-vmtools
-MIRROR=http://fedora.bhs.mirrors.ovh.net/linux/releases/22/Server/x86_64/iso
-MOUNT_POINT=/mnt/fedora22
+
+MIRROR=
+ISO=
+ISO_CHECKSUM=
+ISO_DIR=
+MOUNT_POINT=
+DVD_LAYOUT=
+DVD_TITLE=
+ISO_FILENAME=
+
+
+usage() {
+cat <<EOF
+
+Create a custom Fedora ISO with the necessary packages and tooling installed 
+for deploying on SmartOS, SDC and the Joyent Public Cloud.
+
+Usage:
+  $0 -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -t <DVD_TITLE> -f <ISO_FILENAME>
+
+  Example:
+    $0 -m http://fedora.bhs.mirrors.ovh.net/linux/releases/22/Server/x86_64/iso -i Fedora-Server-netinst-x86_64-22.iso -c Fedora-Server-22-x86_64-CHECKSUM> -d /data/fetched-fedora-iso -l /data/fedora-22-iso-layout -M /mnt/fedora22 -t Fedora-22-Joyent -f fedora-22-joyent.iso
+
+  OPTIONS:
+    -m The mirror to use when downloading the release ISO
+    -i The ISO filename
+    -c The name of the cehcksum file for the ISO
+    -d The location to save the dowloaded ISO. Must be absolute path.
+    -M The mount point for the downloaded ISO
+    -l The directory location for saving a copy of the ISO layout. Must be absolute path.
+    -t The title to use for the custom ISO
+    -f The name to use for the custom ISO
+    -h Show this message
+
+EOF
+}
+
+while getopts "hm:i:c:d:M:l:t:f:" OPTION
+do
+  case $OPTION in
+    h)
+      usage
+      exit 1
+      ;;
+    m)
+      MIRROR=${OPTARG%/}
+      ;;
+    i)
+      ISO=${OPTARG}
+      ;;
+    c)
+      ISO_CHECKSUM=${OPTARG}
+      ;;
+    d)
+      ISO_DIR=${OPTARG%/}
+      ;;
+    M)
+      MOUNT_POINT=${OPTARG%/}
+      ;;
+    l)
+      DVD_LAYOUT=${OPTARG%/}
+      ;;
+    t)
+      DVD_TITLE="${OPTARG}"
+      ;;
+    f)
+      ISO_FILENAME="./${OPTARG}"
+      ;;
+    ?)
+      usage
+      exit
+      ;;
+  esac
+done
+
+if [[ -z ${MIRROR} ]]; then
+  echo "Error: missing mirror url (-m)"
+  exit 1
+fi
+
+if [[ -z ${ISO} ]]; then
+  echo "Error: missing ISO (-i) value"
+  exit 1
+fi
+
+if [[ -z ${ISO} ]]; then
+  echo "Error: missing ISO checksum (-c) value"
+  exit 1
+fi
+
+if [[ -z ${ISO_DIR} ]]; then
+  echo "Error: missing ISO directory (-d) value"
+  exit 1
+fi
+
+if [[ ! -d ${ISO_DIR} ]]; then
+  echo "Error: ISO directory (${ISO_DIR}) does not exist"
+  exit 1
+fi
+
+if [[ -z ${MOUNT_POINT} ]]; then
+  echo "Error: missing mount point directory (-M) value"
+  exit 1
+fi
+
+if [[ ! -d ${MOUNT_POINT} ]]; then
+  echo "Error: Mount point directory (${MOUNT_POINT}) does not exist"
+  exit 1
+fi
+
+if [[ -z ${DVD_LAYOUT} ]]; then
+  echo "Error: missing DVD layout directory (-l) value"
+  exit 1
+fi
+
+if [[ ! -d ${DVD_LAYOUT} ]]; then
+  echo "Error: DVD layout directory (${DVD_LAYOUT}) does not exist"
+  exit 1
+fi
+
+if [[ -z ${DVD_TITLE} ]]; then
+  echo "Error: missing DVD title (-t) value"
+  exit 1
+fi
+
+if [[ -z ${ISO_FILENAME} ]]; then
+  echo "Error: missing custom ISO file name (-f) value"
+  exit 1
+fi
+
 
 function fetch_iso() {
     if [ ! -d $ISO_DIR ]; then

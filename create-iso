@@ -5,6 +5,7 @@ IFS=$'\n\t'
 
 CUR_TIME=$(date +%FT%TZ)
 KS_CFG=./ks.cfg
+DVD_TITLE=Fedora-Joyent
 GUESTTOOLS=sdc-vmtools
 
 MIRROR=
@@ -13,7 +14,6 @@ ISO_CHECKSUM=
 ISO_DIR=
 MOUNT_POINT=
 DVD_LAYOUT=
-DVD_TITLE=
 ISO_FILENAME=
 
 
@@ -24,10 +24,10 @@ Create a custom Fedora ISO with the necessary packages and tooling installed
 for deploying on SmartOS, SDC and the Joyent Public Cloud.
 
 Usage:
-  $0 -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -t <DVD_TITLE> -f <ISO_FILENAME>
+  $0 -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -f <ISO_FILENAME>
 
   Example:
-    $0 -m http://fedora.bhs.mirrors.ovh.net/linux/releases/23/Server/x86_64/iso -i Fedora-Server-netinst-x86_64-23.iso -c Fedora-Server-23-x86_64-CHECKSUM -d /data/fetched-fedora-iso -M /mnt/fedora22 -l /data/fedora-23-iso-layout -t Fedora-23-Joyent -f fedora-23-joyent.iso
+    $0 -m http://fedora.bhs.mirrors.ovh.net/linux/releases/23/Server/x86_64/iso -i Fedora-Server-netinst-x86_64-23.iso -c Fedora-Server-23-x86_64-CHECKSUM -d /data/fetched-fedora-iso -M /mnt/fedora22 -l /data/fedora-23-iso-layout -f fedora-23-joyent.iso
 
   OPTIONS:
     -m The mirror to use when downloading the release ISO
@@ -36,7 +36,6 @@ Usage:
     -d The location to save the dowloaded ISO. Must be absolute path.
     -M The mount point for the downloaded ISO
     -l The directory location for saving a copy of the ISO layout. Must be absolute path.
-    -t The title to use for the custom ISO
     -f The name to use for the custom ISO
     -h Show this message
 
@@ -67,9 +66,6 @@ do
       ;;
     l)
       DVD_LAYOUT=${OPTARG%/}
-      ;;
-    t)
-      DVD_TITLE="${OPTARG}"
       ;;
     f)
       ISO_FILENAME="./${OPTARG}"
@@ -113,11 +109,6 @@ fi
 
 if [[ -z ${DVD_LAYOUT} ]]; then
   echo "Error: missing DVD layout directory (-l) value"
-  exit 1
-fi
-
-if [[ -z ${DVD_TITLE} ]]; then
-  echo "Error: missing DVD title (-t) value"
   exit 1
 fi
 

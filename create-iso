@@ -205,11 +205,6 @@ function create_layout() {
     echo "==> Finished Populating Layout"
 }
 
-function copy_ks_cfg() {
-    echo "==> Copying Kickstart file"
-    cp $KS_CFG $DVD_LAYOUT/
-}
-
 function copy_guest_tools() {
     echo "==> Copying $GUESTTOOLS"
     echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
@@ -218,22 +213,22 @@ function copy_guest_tools() {
     cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
 }
 
+function cleanup_layout() {
+    echo "==> Cleaning up $DVD_LAYOUT"
+    find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
+}
+
+function copy_ks_cfg() {
+    echo "==> Copying Kickstart file"
+    cp $KS_CFG $DVD_LAYOUT/
+}
 
 function modify_boot_menu() {
     echo "==> Modifying grub boot menu"
     cp ./isolinux.cfg $DVD_LAYOUT/isolinux/
 }
 
-function cleanup_layout() {
-    echo "==> Cleaning up $DVD_LAYOUT"
-    find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
-}
-
 function create_newiso() {
-    copy_guest_tools
-    cleanup_layout
-    copy_ks_cfg
-    modify_boot_menu
     echo "==> Preparing NEW ISO"
 
     pushd $DVD_LAYOUT > /dev/null 2>&1
@@ -252,51 +247,12 @@ function create_newiso() {
     echo "==> NEW ISO $ISO_FILENAME is ready"
 }
 
-# main line
+# main
 
-usage()
-{
-    cat <<EOF
-Usage:
-        $0 [options] command [command]
-option:
-        -h                    - this usage
-
-Commands:
-        fetch                 - fetch ISO
-        layout                - create layout for new ISO
-        finish                - create the new ISO
-
-EOF
-    exit 1
-}
-
-args=`getopt -o h -n 'create-iso' -- "$@"`
-
-if [[ $# == 0 ]]; then
-    usage;
-fi
-
-eval set -- $args
-
-while true ; do
-   case "$1" in
-       -h)
-            usage;
-            break;;
-       --)
-           shift; break;;
-   esac
-done
-
-for arg ; do
-    if [ $arg = 'fetch' ] ; then
-        fetch_iso
-    fi
-    if [ $arg = 'layout' ] ; then
-        create_layout
-    fi
-    if [ $arg = 'finish' ] ; then
-        create_newiso
-    fi
-done
+fetch_iso
+create_layout
+copy_guest_tools
+cleanup_layout
+copy_ks_cfg
+modify_boot_menu
+create_newiso

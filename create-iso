@@ -102,11 +102,6 @@ if [[ -z ${MOUNT_POINT} ]]; then
   exit 1
 fi
 
-if [[ ! -d ${MOUNT_POINT} ]]; then
-  echo "Error: Mount point directory (${MOUNT_POINT}) does not exist"
-  exit 1
-fi
-
 if [[ -z ${DVD_LAYOUT} ]]; then
   echo "Error: missing DVD layout directory (-l) value"
   exit 1

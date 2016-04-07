@@ -18,13 +18,13 @@ Included is a `setup_env.sh` script to be run inside the Fedora or CentOS instan
 
 To build a custom ISO, run the `create-iso` script:
 
-    create-iso
-
-The resulting ISO will be ready to boot and install a clean image ready for SmartOS, SDC and the Joyent Public Cloud.
+    ./create-iso -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -f <ISO_FILENAME>
 
 See `./create-iso -h` for usage.
 
-On a SmartOS machine, you can then create an image with:
+The resulting ISO will be ready to boot and install a clean image ready for SmartOS, SDC and the Joyent Public Cloud.
+
+On a SmartOS machine you can then create an image with:
 
 ```
 ./create-image -i <ISO> -n <IMAGE_NAME> -d <DESC> -u <HOMEPAGE> -o <OWNER_UUID> -p <IP> -m NETMASK -g <GATEWAY> -v <VLAN_ID> -U <NETWORK_UUID>

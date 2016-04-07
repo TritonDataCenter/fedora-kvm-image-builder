@@ -12,34 +12,25 @@ In order to use this repo, you need to have the following:
 
 ## Setup
 
-Included is a `setup_env.sh` script to be run inside the Fedora or CentOS instance. This script will install the necessary packages required to for the `create-image` script.
+Included is a `setup_env.sh` script to be run inside the Fedora or CentOS instance. This script will install the necessary packages required for the `create-iso` and script.
 
-## Using
+## Usage
 
-The next script is `create_iso` which takes a series of commands:
+To build a custom ISO, run the `create-iso` script:
 
- * fetch
- * layout
- * finish
-
-### fetch
-This command will fetch the DVD ISO from the mirror specified by `$MIRROR`.
-
-### layout
-This command will extract the ISO and place it onto disk.
-
-## finish
-This command will cleanup the layout, copy over the kickstart file in `./ks.cfg`, modify the boot menu to add the kickstart file, and creates the ISO in `./iso`.
-
-You can run each command separately or all together.
-
-    ./create_iso fetch
-    ./create_iso layout
-    ./create_iso finish
-
-Or `./create_iso fetch layout finish`.
+    create-iso
 
 The resulting ISO will be ready to boot and install a clean image ready for SmartOS, SDC and the Joyent Public Cloud.
+
+See `./create-iso -h` for usage.
+
+On a SmartOS machine, you can then create an image with:
+
+```
+./create-image -i <ISO> -n <IMAGE_NAME> -d <DESC> -u <HOMEPAGE> -o <OWNER_UUID> -p <IP> -m NETMASK -g <GATEWAY> -v <VLAN_ID> -U <NETWORK_UUID>
+```
+
+See `./create-image -h` for usage.
 
 ## Default Settings For Image
 

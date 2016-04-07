@@ -3,17 +3,115 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-CUR_TIME=`date +%FT%TZ`
-DVD_LAYOUT=/data/fedora-22-iso-layout
-DVD_TITLE='Fedora-22-Joyent'
-ISO=Fedora-Server-netinst-x86_64-22.iso
-ISO_CHECKSUM=Fedora-Server-22-x86_64-CHECKSUM
-ISO_DIR=/data/fetched-fedora-iso
-ISO_FILENAME=./fedora-22-joyent.iso
+CUR_TIME=$(date +%FT%TZ)
 KS_CFG=./ks.cfg
+DVD_TITLE=Fedora-Joyent
 GUESTTOOLS=sdc-vmtools
-MIRROR=http://fedora.bhs.mirrors.ovh.net/linux/releases/22/Server/x86_64/iso
-MOUNT_POINT=/mnt/fedora22
+
+MIRROR=
+ISO=
+ISO_CHECKSUM=
+ISO_DIR=
+MOUNT_POINT=
+DVD_LAYOUT=
+ISO_FILENAME=
+
+
+usage() {
+cat <<EOF
+
+Create a custom Fedora ISO with the necessary packages and tooling installed 
+for deploying on SmartOS, SDC and the Joyent Public Cloud.
+
+Usage:
+  $0 -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -f <ISO_FILENAME>
+
+  Example:
+    $0 -m http://fedora.bhs.mirrors.ovh.net/linux/releases/23/Server/x86_64/iso -i Fedora-Server-netinst-x86_64-23.iso -c Fedora-Server-23-x86_64-CHECKSUM -d /data/fetched-fedora-iso -M /mnt/fedora22 -l /data/fedora-23-iso-layout -f fedora-23-joyent.iso
+
+  OPTIONS:
+    -m The mirror to use when downloading the release ISO
+    -i The ISO filename
+    -c The name of the checksum file for the ISO
+    -d The location to save the dowloaded ISO. Must be absolute path.
+    -M The mount point for the downloaded ISO
+    -l The directory location for saving a copy of the ISO layout. Must be absolute path.
+    -f The name to use for the custom ISO
+    -h Show this message
+
+EOF
+}
+
+while getopts "hm:i:c:d:M:l:t:f:" OPTION
+do
+  case $OPTION in
+    h)
+      usage
+      exit 1
+      ;;
+    m)
+      MIRROR=${OPTARG%/}
+      ;;
+    i)
+      ISO=${OPTARG}
+      ;;
+    c)
+      ISO_CHECKSUM=${OPTARG}
+      ;;
+    d)
+      ISO_DIR=${OPTARG%/}
+      ;;
+    M)
+      MOUNT_POINT=${OPTARG%/}
+      ;;
+    l)
+      DVD_LAYOUT=${OPTARG%/}
+      ;;
+    f)
+      ISO_FILENAME="./${OPTARG}"
+      ;;
+    ?)
+      usage
+      exit
+      ;;
+  esac
+done
+
+if [[ -z ${MIRROR} ]]; then
+  echo "Error: missing mirror url (-m)"
+  exit 1
+fi
+
+if [[ -z ${ISO} ]]; then
+  echo "Error: missing ISO (-i) value"
+  exit 1
+fi
+
+if [[ -z ${ISO} ]]; then
+  echo "Error: missing ISO checksum (-c) value"
+  exit 1
+fi
+
+if [[ -z ${ISO_DIR} ]]; then
+  echo "Error: missing ISO directory (-d) value"
+  exit 1
+fi
+
+if [[ -z ${MOUNT_POINT} ]]; then
+  echo "Error: missing mount point directory (-M) value"
+  exit 1
+fi
+
+if [[ -z ${DVD_LAYOUT} ]]; then
+  echo "Error: missing DVD layout directory (-l) value"
+  exit 1
+fi
+
+if [[ -z ${ISO_FILENAME} ]]; then
+  echo "Error: missing custom ISO file name (-f) value"
+  exit 1
+fi
+
 
 function fetch_iso() {
     if [ ! -d $ISO_DIR ]; then
@@ -25,18 +123,32 @@ function fetch_iso() {
         curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
     fi
     
-    # Check if we already imported the key
+    # Import public keys listed @ https://getfedora.org/keys/
+    # Key ID	4096R/95A43F54 2013-11-14
+    # Fingerprint	6596 B8FB ABDA 5227 A9C5 B59E 89AD 4E87 95A4 3F54
+    # uid	Fedora (21) <fedora@fedoraproject.org>
     #
-    # pub  4096R/8E1431D5 2014-07-09 Fedora (22) <fedora@fedoraproject.org>
-    #  Key fingerprint = C527 EA07 A934 9B58 9C35 E1BF 11AD C094 8E14 31D5
+    # Key ID	4096R/8E1431D5 2014-07-09
+    # Fingerprint	C527 EA07 A934 9B58 9C35 E1BF 11AD C094 8E14 31D5
+    # uid	Fedora (22) <fedora@fedoraproject.org>
+    #
+    # Key ID	4096R/34EC9CBA 2015-02-17
+    # Fingerprint	EF45 5106 80FB 0232 6B04 5AFB 3247 4CF8 34EC 9CBA
+    # uid	Fedora (23) <fedora-23-primary@fedoraproject.org>
+    #
+    # Key ID	4096R/81B46521 2015-07-25
+    # Fingerprint	5048 BDBB A5E7 76E5 47B0 9CCC 73BD E983 81B4 6521
+    # uid	Fedora (24) <fedora-24-primary@fedoraproject.org>
     
-    set +e 
-    gpg --list-keys | grep 4096R/8E1431D5 > /dev/null
-    if [[ $? -gt 0 ]]; then
-        echo "==> Adding gpg signing keys"
-        gpg --keyserver pool.sks-keyservers.net --recv-keys C527EA07A9349B589C35E1BF11ADC0948E1431D5
-    fi
-    set -e
+    echo "==> Adding gpg signing keys"
+    for key in \
+        6596B8FBABDA5227A9C5B59E89AD4E8795A43F54 \
+        C527EA07A9349B589C35E1BF11ADC0948E1431D5 \
+        EF45510680FB02326B045AFB32474CF834EC9CBA \
+        5048BDBBA5E776E547B09CCC73BDE98381B46521 \
+      ; do \
+        gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+    done
     
     echo "==> Checking to see if we have the latest $ISO:"
     echo "===> Getting signed checksum ($ISO_CHECKSUM)"
@@ -93,11 +205,6 @@ function create_layout() {
     echo "==> Finished Populating Layout"
 }
 
-function copy_ks_cfg() {
-    echo "==> Copying Kickstart file"
-    cp $KS_CFG $DVD_LAYOUT/
-}
-
 function copy_guest_tools() {
     echo "==> Copying $GUESTTOOLS"
     echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
@@ -106,22 +213,22 @@ function copy_guest_tools() {
     cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
 }
 
+function cleanup_layout() {
+    echo "==> Cleaning up $DVD_LAYOUT"
+    find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
+}
+
+function copy_ks_cfg() {
+    echo "==> Copying Kickstart file"
+    cp $KS_CFG $DVD_LAYOUT/
+}
 
 function modify_boot_menu() {
     echo "==> Modifying grub boot menu"
     cp ./isolinux.cfg $DVD_LAYOUT/isolinux/
 }
 
-function cleanup_layout() {
-    echo "==> Cleaning up $DVD_LAYOUT"
-    find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
-}
-
 function create_newiso() {
-    copy_guest_tools
-    cleanup_layout
-    copy_ks_cfg
-    modify_boot_menu
     echo "==> Preparing NEW ISO"
 
     pushd $DVD_LAYOUT > /dev/null 2>&1
@@ -140,51 +247,12 @@ function create_newiso() {
     echo "==> NEW ISO $ISO_FILENAME is ready"
 }
 
-# main line
+# main
 
-usage()
-{
-    cat <<EOF
-Usage:
-        $0 [options] command [command]
-option:
-        -h                    - this usage
-
-Commands:
-        fetch                 - fetch ISO
-        layout                - create layout for new ISO
-        finish                - create the new ISO
-
-EOF
-    exit 1
-}
-
-args=`getopt -o h -n 'create-iso' -- "$@"`
-
-if [[ $# == 0 ]]; then
-    usage;
-fi
-
-eval set -- $args
-
-while true ; do
-   case "$1" in
-       -h)
-            usage;
-            break;;
-       --)
-           shift; break;;
-   esac
-done
-
-for arg ; do
-    if [ $arg = 'fetch' ] ; then
-        fetch_iso
-    fi
-    if [ $arg = 'layout' ] ; then
-        create_layout
-    fi
-    if [ $arg = 'finish' ] ; then
-        create_newiso
-    fi
-done
+fetch_iso
+create_layout
+copy_guest_tools
+cleanup_layout
+copy_ks_cfg
+modify_boot_menu
+create_newiso

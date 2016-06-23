@@ -139,6 +139,10 @@ function fetch_iso() {
     # Key ID	4096R/81B46521 2015-07-25
     # Fingerprint	5048 BDBB A5E7 76E5 47B0 9CCC 73BD E983 81B4 6521
     # uid	Fedora (24) <fedora-24-primary@fedoraproject.org>
+	#
+    # Key ID	4096R/FDB19C98 2016-03-31
+    # Fingerprint	C437 DCCD 558A 66A3 7D6F 4372 4089 D8F2 FDB1 9C98
+    # uid	Fedora (25) <fedora-25-primary@fedoraproject.org>
     
     echo "==> Adding gpg signing keys"
     for key in \
@@ -146,6 +150,7 @@ function fetch_iso() {
         C527EA07A9349B589C35E1BF11ADC0948E1431D5 \
         EF45510680FB02326B045AFB32474CF834EC9CBA \
         5048BDBBA5E776E547B09CCC73BDE98381B46521 \
+        C437DCCD558A66A37D6F43724089D8F2FDB19C98 \
       ; do \
         gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
     done

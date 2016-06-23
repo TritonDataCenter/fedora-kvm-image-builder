@@ -2,6 +2,7 @@
 
 set -euo pipefail
 IFS=$'\n\t'
+set -o xtrace
 
 CUR_TIME=$(date +%FT%TZ)
 KS_CFG=./ks.cfg

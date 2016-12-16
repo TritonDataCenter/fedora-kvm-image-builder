@@ -123,15 +123,6 @@ function fetch_iso() {
         curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
     fi
     
-    # Import public keys listed @ https://getfedora.org/keys/
-    # Key ID	4096R/95A43F54 2013-11-14
-    # Fingerprint	6596 B8FB ABDA 5227 A9C5 B59E 89AD 4E87 95A4 3F54
-    # uid	Fedora (21) <fedora@fedoraproject.org>
-    #
-    # Key ID	4096R/8E1431D5 2014-07-09
-    # Fingerprint	C527 EA07 A934 9B58 9C35 E1BF 11AD C094 8E14 31D5
-    # uid	Fedora (22) <fedora@fedoraproject.org>
-    #
     # Key ID	4096R/34EC9CBA 2015-02-17
     # Fingerprint	EF45 5106 80FB 0232 6B04 5AFB 3247 4CF8 34EC 9CBA
     # uid	Fedora (23) <fedora-23-primary@fedoraproject.org>
@@ -150,8 +141,6 @@ function fetch_iso() {
     
     echo "==> Adding gpg signing keys"
     for key in \
-        6596B8FBABDA5227A9C5B59E89AD4E8795A43F54 \
-        C527EA07A9349B589C35E1BF11ADC0948E1431D5 \
         EF45510680FB02326B045AFB32474CF834EC9CBA \
         5048BDBBA5E776E547B09CCC73BDE98381B46521 \
         C437DCCD558A66A37D6F43724089D8F2FDB19C98 \

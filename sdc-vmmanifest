@@ -141,4 +141,3 @@ cat <<EOF
   "urn": "sdc:sdc:${name}:${version}"
 }
 EOF
-

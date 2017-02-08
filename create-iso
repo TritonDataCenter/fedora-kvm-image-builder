@@ -113,7 +113,7 @@ if [[ -z ${ISO_FILENAME} ]]; then
 fi
 
 
-function fetch_iso() {
+fetch_iso() {
     if [[ ! -d $ISO_DIR ]]; then
         mkdir -p $ISO_DIR
     fi
@@ -170,7 +170,7 @@ function fetch_iso() {
     fi
 }
 
-function create_layout() {
+create_layout() {
     echo "==> Creating ISO Layout"
     if [[ -d $DVD_LAYOUT ]]; then
         echo "==> Layout $DVD_LAYOUT exists, deleting..."
@@ -200,7 +200,7 @@ function create_layout() {
     echo "==> Finished Populating Layout"
 }
 
-function copy_guest_tools() {
+copy_guest_tools() {
     echo "==> Copying $GUESTTOOLS"
     echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
     git submodule init
@@ -208,22 +208,22 @@ function copy_guest_tools() {
     cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
 }
 
-function cleanup_layout() {
+cleanup_layout() {
     echo "==> Cleaning up $DVD_LAYOUT"
     find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
 }
 
-function copy_ks_cfg() {
+copy_ks_cfg() {
     echo "==> Copying Kickstart file"
     cp $KS_CFG $DVD_LAYOUT/
 }
 
-function modify_boot_menu() {
+modify_boot_menu() {
     echo "==> Modifying grub boot menu"
     cp ./isolinux.cfg $DVD_LAYOUT/isolinux/
 }
 
-function create_newiso() {
+create_newiso() {
     echo "==> Preparing NEW ISO"
 
     pushd $DVD_LAYOUT > /dev/null 2>&1

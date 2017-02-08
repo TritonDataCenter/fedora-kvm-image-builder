@@ -91,7 +91,7 @@ do
 			usage
 			exit 1
 			;;
-		ac
+		esac
 done
 
 if [[ -z ${ISO} || -z ${IMAGE_NAME} || -z ${DESC} || -z ${HOMEPAGE} \

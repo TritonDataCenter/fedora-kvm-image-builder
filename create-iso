@@ -24,222 +24,222 @@ Create a custom Fedora ISO with the necessary packages and tooling installed
 for deploying on SmartOS, SDC and the Joyent Public Cloud.
 
 Usage:
-  $0 -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -f <ISO_FILENAME>
+	$0 -m <MIRROR> -i <ISO> -c <ISO_CHECKSUM> -d <ISO_DIR> -M <MOUNT_POINT> -l <DVD_LAYOUT> -f <ISO_FILENAME>
 
-  Example:
-    $0 -m http://fedora.bhs.mirrors.ovh.net/linux/releases/23/Server/x86_64/iso -i Fedora-Server-netinst-x86_64-23.iso -c Fedora-Server-23-x86_64-CHECKSUM -d /data/fetched-fedora-iso -M /mnt/fedora22 -l /data/fedora-23-iso-layout -f fedora-23-joyent.iso
+Example:
+	$0 -m http://fedora.bhs.mirrors.ovh.net/linux/releases/23/Server/x86_64/iso -i Fedora-Server-netinst-x86_64-23.iso -c Fedora-Server-23-x86_64-CHECKSUM -d /data/fetched-fedora-iso -M /mnt/fedora22 -l /data/fedora-23-iso-layout -f fedora-23-joyent.iso
 
-  OPTIONS:
-    -m The mirror to use when downloading the release ISO
-    -i The ISO filename
-    -c The name of the checksum file for the ISO
-    -d The location to save the dowloaded ISO. Must be absolute path.
-    -M The mount point for the downloaded ISO
-    -l The directory location for saving a copy of the ISO layout. Must be absolute path.
-    -f The name to use for the custom ISO
-    -h Show this message
+OPTIONS:
+	-m The mirror to use when downloading the release ISO
+	-i The ISO filename
+	-c The name of the checksum file for the ISO
+	-d The location to save the dowloaded ISO. Must be absolute path.
+	-M The mount point for the downloaded ISO
+	-l The directory location for saving a copy of the ISO layout. Must be absolute path.
+	-f The name to use for the custom ISO
+	-h Show this message
 
 EOF
 }
 
 while getopts "hm:i:c:d:M:l:t:f:" OPTION
 do
-  case $OPTION in
-    h)
-      usage
-      exit 1
-      ;;
-    m)
-      MIRROR=${OPTARG%/}
-      ;;
-    i)
-      ISO=${OPTARG}
-      ;;
-    c)
-      ISO_CHECKSUM=${OPTARG}
-      ;;
-    d)
-      ISO_DIR=${OPTARG%/}
-      ;;
-    M)
-      MOUNT_POINT=${OPTARG%/}
-      ;;
-    l)
-      DVD_LAYOUT=${OPTARG%/}
-      ;;
-    f)
-      ISO_FILENAME="./${OPTARG}"
-      ;;
-    ?)
-      usage
-      exit
-      ;;
-  esac
+	case $OPTION in
+		h)
+			usage
+			exit 1
+			;;
+		m)
+			MIRROR=${OPTARG%/}
+			;;
+		i)
+			ISO=${OPTARG}
+			;;
+		c)
+			ISO_CHECKSUM=${OPTARG}
+			;;
+		d)
+			ISO_DIR=${OPTARG%/}
+			;;
+		M)
+			MOUNT_POINT=${OPTARG%/}
+			;;
+		l)
+			DVD_LAYOUT=${OPTARG%/}
+			;;
+		f)
+			ISO_FILENAME="./${OPTARG}"
+			;;
+		?)
+			usage
+			exit
+			;;
+	esac
 done
 
 if [[ -z ${MIRROR} ]]; then
-  echo "Error: missing mirror url (-m)"
-  exit 1
+	echo "Error: missing mirror url (-m)"
+	exit 1
 fi
 
 if [[ -z ${ISO} ]]; then
-  echo "Error: missing ISO (-i) value"
-  exit 1
+	echo "Error: missing ISO (-i) value"
+	exit 1
 fi
 
 if [[ -z ${ISO} ]]; then
-  echo "Error: missing ISO checksum (-c) value"
-  exit 1
+	echo "Error: missing ISO checksum (-c) value"
+	exit 1
 fi
 
 if [[ -z ${ISO_DIR} ]]; then
-  echo "Error: missing ISO directory (-d) value"
-  exit 1
+	echo "Error: missing ISO directory (-d) value"
+	exit 1
 fi
 
 if [[ -z ${MOUNT_POINT} ]]; then
-  echo "Error: missing mount point directory (-M) value"
-  exit 1
+	echo "Error: missing mount point directory (-M) value"
+	exit 1
 fi
 
 if [[ -z ${DVD_LAYOUT} ]]; then
-  echo "Error: missing DVD layout directory (-l) value"
-  exit 1
+	echo "Error: missing DVD layout directory (-l) value"
+	exit 1
 fi
 
 if [[ -z ${ISO_FILENAME} ]]; then
-  echo "Error: missing custom ISO file name (-f) value"
-  exit 1
+	echo "Error: missing custom ISO file name (-f) value"
+	exit 1
 fi
 
 
 fetch_iso() {
-    if [[ ! -d $ISO_DIR ]]; then
-        mkdir -p $ISO_DIR
-    fi
-    
-    if [[ ! -e $ISO_DIR/$ISO ]]; then
-        echo "==> No local copy of $ISO. Fetching latest $ISO"
-        curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
-    fi
-    
-    #
-    # Key ID	4096R/81B46521 2015-07-25
-    # Fingerprint	5048 BDBB A5E7 76E5 47B0 9CCC 73BD E983 81B4 6521
-    # uid	Fedora (24) <fedora-24-primary@fedoraproject.org>
-    #
-    # Key ID	4096R/FDB19C98 2016-03-31
-    # Fingerprint	C437 DCCD 558A 66A3 7D6F 4372 4089 D8F2 FDB1 9C98
-    # uid	Fedora (25) <fedora-25-primary@fedoraproject.org>
-    
-    # Key ID	4096R/64DAB85D 2016-09-09
-    # Fingerprint	E641 850B 77DF 4353 78D1 D7E2 812A 6B4B 64DA B85D
-    # uid	Fedora (26) <fedora-26-primary@fedoraproject.org>
-    
-    echo "==> Adding gpg signing keys"
-    for key in \
-        5048BDBBA5E776E547B09CCC73BDE98381B46521 \
-        C437DCCD558A66A37D6F43724089D8F2FDB19C98 \
-        E641850B77DF435378D1D7E2812A6B4B64DAB85D \
-      ; do \
-        gpg --list-keys "$key" || gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-    done
-    
-    echo "==> Checking to see if we have the latest $ISO:"
-    echo "===> Getting signed checksum ($ISO_CHECKSUM)"
-    curl -s -o $ISO_DIR/$ISO_CHECKSUM $MIRROR/$ISO_CHECKSUM
-    
-    ISO_NAME=$(echo $ISO | cut -f1 -d'.')
-    
-    echo "===> Verifying signed checksum $ISO_CHECKSUM"
-    gpg --verify $ISO_DIR/$ISO_CHECKSUM
-    
-    CHECKSUM=$(grep $ISO_NAME $ISO_DIR/$ISO_CHECKSUM | cut -f4 -d' ')
-    
-    if [[ $(sha256sum $ISO_DIR/$ISO | cut -f1 -d' ') == "$CHECKSUM" ]]; then
-        echo "===> Checksums match, using local copy of $ISO"
-    else
-        echo "===> Checksums do not match. Fetching latest $ISO"
-        curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
-        
-        echo "===> Verifying sha256 of $ISO"
-        pushd $PWD
-        cd $ISO_DIR
-        grep "$ISO\$" $ISO_CHECKSUM | sha256sum -c -
-        popd
-    fi
+	if [[ ! -d $ISO_DIR ]]; then
+		mkdir -p $ISO_DIR
+	fi
+	
+	if [[ ! -e $ISO_DIR/$ISO ]]; then
+		echo "==> No local copy of $ISO. Fetching latest $ISO"
+		curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
+	fi
+	
+	#
+	# Key ID	4096R/81B46521 2015-07-25
+	# Fingerprint	5048 BDBB A5E7 76E5 47B0 9CCC 73BD E983 81B4 6521
+	# uid	Fedora (24) <fedora-24-primary@fedoraproject.org>
+	#
+	# Key ID	4096R/FDB19C98 2016-03-31
+	# Fingerprint	C437 DCCD 558A 66A3 7D6F 4372 4089 D8F2 FDB1 9C98
+	# uid	Fedora (25) <fedora-25-primary@fedoraproject.org>
+	
+	# Key ID	4096R/64DAB85D 2016-09-09
+	# Fingerprint	E641 850B 77DF 4353 78D1 D7E2 812A 6B4B 64DA B85D
+	# uid	Fedora (26) <fedora-26-primary@fedoraproject.org>
+	
+	echo "==> Adding gpg signing keys"
+	for key in \
+		5048BDBBA5E776E547B09CCC73BDE98381B46521 \
+		C437DCCD558A66A37D6F43724089D8F2FDB19C98 \
+		E641850B77DF435378D1D7E2812A6B4B64DAB85D \
+		; do \
+		gpg --list-keys "$key" || gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+	done
+	
+	echo "==> Checking to see if we have the latest $ISO:"
+	echo "===> Getting signed checksum ($ISO_CHECKSUM)"
+	curl -s -o $ISO_DIR/$ISO_CHECKSUM $MIRROR/$ISO_CHECKSUM
+	
+	ISO_NAME=$(echo $ISO | cut -f1 -d'.')
+	
+	echo "===> Verifying signed checksum $ISO_CHECKSUM"
+	gpg --verify $ISO_DIR/$ISO_CHECKSUM
+	
+	CHECKSUM=$(grep $ISO_NAME $ISO_DIR/$ISO_CHECKSUM | cut -f4 -d' ')
+	
+	if [[ $(sha256sum $ISO_DIR/$ISO | cut -f1 -d' ') == "$CHECKSUM" ]]; then
+		echo "===> Checksums match, using local copy of $ISO"
+	else
+		echo "===> Checksums do not match. Fetching latest $ISO"
+		curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
+		
+		echo "===> Verifying sha256 of $ISO"
+		pushd $PWD
+		cd $ISO_DIR
+		grep "$ISO\$" $ISO_CHECKSUM | sha256sum -c -
+		popd
+	fi
 }
 
 create_layout() {
-    echo "==> Creating ISO Layout"
-    if [[ -d $DVD_LAYOUT ]]; then
-        echo "==> Layout $DVD_LAYOUT exists, deleting..."
-        rm -rf $DVD_LAYOUT
-    fi
-    echo "==> Creating $DVD_LAYOUT"
-    mkdir -p $DVD_LAYOUT
-
-    # Check if $MOUNT_POINT is already mounted
-    # This may happen if a previous build failed
-    if [[ $(grep $MOUNT_POINT /proc/mounts) ]]; then
-      echo "===> Unmounting $MOUNT_POINT from previous build..."
-        umount $MOUNT_POINT
-    fi
-
-    echo "==> Mounting $ISO to $MOUNT_POINT"
-    if [[ ! -d $MOUNT_POINT ]]; then
-        echo "===> Creating $MOUNT_POINT..."
-        mkdir $MOUNT_POINT
-    fi
-    mount $ISO_DIR/$ISO $MOUNT_POINT -o loop
-    
-    cp -a $MOUNT_POINT/* $DVD_LAYOUT
-
-    umount $MOUNT_POINT
-    
-    echo "==> Finished Populating Layout"
+	echo "==> Creating ISO Layout"
+	if [[ -d $DVD_LAYOUT ]]; then
+		echo "==> Layout $DVD_LAYOUT exists, deleting..."
+		rm -rf $DVD_LAYOUT
+	fi
+	echo "==> Creating $DVD_LAYOUT"
+	mkdir -p $DVD_LAYOUT
+	
+	# Check if $MOUNT_POINT is already mounted
+	# This may happen if a previous build failed
+	if [[ $(grep $MOUNT_POINT /proc/mounts) ]]; then
+		echo "===> Unmounting $MOUNT_POINT from previous build..."
+		umount $MOUNT_POINT
+	fi
+	
+	echo "==> Mounting $ISO to $MOUNT_POINT"
+	if [[ ! -d $MOUNT_POINT ]]; then
+		echo "===> Creating $MOUNT_POINT..."
+		mkdir $MOUNT_POINT
+	fi
+	mount $ISO_DIR/$ISO $MOUNT_POINT -o loop
+	
+	cp -a $MOUNT_POINT/* $DVD_LAYOUT
+	
+	umount $MOUNT_POINT
+	
+	echo "==> Finished Populating Layout"
 }
 
 copy_guest_tools() {
-    echo "==> Copying $GUESTTOOLS"
-    echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
-    git submodule init
-    git submodule update
-    cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
+	echo "==> Copying $GUESTTOOLS"
+	echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
+	git submodule init
+	git submodule update
+	cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
 }
 
 cleanup_layout() {
-    echo "==> Cleaning up $DVD_LAYOUT"
-    find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
+	echo "==> Cleaning up $DVD_LAYOUT"
+	find $DVD_LAYOUT -name TRANS.TBL -exec rm '{}' +
 }
 
 copy_ks_cfg() {
-    echo "==> Copying Kickstart file"
-    cp $KS_CFG $DVD_LAYOUT/
+	echo "==> Copying Kickstart file"
+	cp $KS_CFG $DVD_LAYOUT/
 }
 
 modify_boot_menu() {
-    echo "==> Modifying grub boot menu"
-    cp ./isolinux.cfg $DVD_LAYOUT/isolinux/
+	echo "==> Modifying grub boot menu"
+	cp ./isolinux.cfg $DVD_LAYOUT/isolinux/
 }
 
 create_newiso() {
-    echo "==> Preparing NEW ISO"
-
-    pushd $DVD_LAYOUT > /dev/null 2>&1
-    
-    echo "==> Creating NEW ISO"
-    mkisofs -r -R -J -T -v \
-     -no-emul-boot -boot-load-size 4 -boot-info-table \
-     -V "$DVD_TITLE" -p "Joyent" \
-     -A "$DVD_TITLE - $CUR_TIME" \
-     -b isolinux/isolinux.bin -c isolinux/boot.cat \
-     -x "lost+found" -o $ISO_FILENAME $DVD_LAYOUT
-    echo "==> Fixing up NEW ISO"
-    echo implantisomd5 $ISO_FILENAME
-    implantisomd5 $ISO_FILENAME
-    popd > /dev/null 2>&1
-    echo "==> NEW ISO $ISO_FILENAME is ready"
+	echo "==> Preparing NEW ISO"
+	
+	pushd $DVD_LAYOUT > /dev/null 2>&1
+	
+	echo "==> Creating NEW ISO"
+	mkisofs -r -R -J -T -v \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		-V "$DVD_TITLE" -p "Joyent" \
+		-A "$DVD_TITLE - $CUR_TIME" \
+		-b isolinux/isolinux.bin -c isolinux/boot.cat \
+		-x "lost+found" -o $ISO_FILENAME $DVD_LAYOUT
+	echo "==> Fixing up NEW ISO"
+	echo implantisomd5 $ISO_FILENAME
+	implantisomd5 $ISO_FILENAME
+	popd > /dev/null 2>&1
+	echo "==> NEW ISO $ISO_FILENAME is ready"
 }
 
 # main

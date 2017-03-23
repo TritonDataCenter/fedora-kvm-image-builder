@@ -1,6 +1,7 @@
 language: bash
 before_install:
   - sudo apt-get -qq update
+  - sudo apt-get install -y python
   - sudo apt-get install -y python-pykickstart
 addons:
   apt:

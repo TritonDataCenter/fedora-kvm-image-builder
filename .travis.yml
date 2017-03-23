@@ -1,4 +1,7 @@
 language: bash
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y python-pykickstart
 addons:
   apt:
     sources:
@@ -6,3 +9,4 @@ addons:
     packages:
     - shellcheck
 script: shellcheck -e SC2086 -s bash create-image create-iso sdc-vmmanifest setup_env.sh
+script: ksvalidator --firsterror ks.cfg

@@ -1,13 +1,10 @@
 language: bash
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y python
-  - sudo apt-get install -y python-pykickstart
 addons:
   apt:
     sources:
     - debian-sid    # Grab ShellCheck from the Debian repo
     packages:
     - shellcheck
+    - python-pykickstart
 script: shellcheck -e SC2086 -s bash create-image create-iso sdc-vmmanifest setup_env.sh
 script: ksvalidator --firsterror ks.cfg

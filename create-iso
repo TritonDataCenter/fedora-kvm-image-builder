@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-IFS=$'\n\t'
-
-TRACE=
-
 if [[ -n "$TRACE" ]]; then
   export PS4='[\D{%FT%TZ}] ${BASH_SOURCE}:${LINENO}: ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
   set -o xtrace
 fi
+
+set -euo pipefail
+IFS=$'\n\t'
 
 CUR_TIME=$(date +%FT%TZ)
 KS_CFG=./ks.cfg
@@ -27,7 +25,7 @@ ISO_FILENAME=
 usage() {
 cat <<EOF
 
-Create a custom Fedora ISO with the necessary packages and tooling installed 
+Create a custom Fedora ISO with the necessary packages and tooling installed
 for deploying on SmartOS, SDC and the Joyent Public Cloud.
 
 Usage:
@@ -124,12 +122,12 @@ fetch_iso() {
 	if [[ ! -d $ISO_DIR ]]; then
 		mkdir -p $ISO_DIR
 	fi
-	
+
 	if [[ ! -e $ISO_DIR/$ISO ]]; then
 		echo "==> No local copy of $ISO. Fetching latest $ISO"
 		curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
 	fi
-	
+
 	#
 	# Key ID	4096R/81B46521 2015-07-25
 	# Fingerprint	5048 BDBB A5E7 76E5 47B0 9CCC 73BD E983 81B4 6521
@@ -138,11 +136,11 @@ fetch_iso() {
 	# Key ID	4096R/FDB19C98 2016-03-31
 	# Fingerprint	C437 DCCD 558A 66A3 7D6F 4372 4089 D8F2 FDB1 9C98
 	# uid	Fedora (25) <fedora-25-primary@fedoraproject.org>
-	
+
 	# Key ID	4096R/64DAB85D 2016-09-09
 	# Fingerprint	E641 850B 77DF 4353 78D1 D7E2 812A 6B4B 64DA B85D
 	# uid	Fedora (26) <fedora-26-primary@fedoraproject.org>
-	
+
 	echo "==> Adding gpg signing keys"
 	for key in \
 		5048BDBBA5E776E547B09CCC73BDE98381B46521 \
@@ -151,24 +149,24 @@ fetch_iso() {
 		; do \
 		gpg --list-keys "$key" || gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
 	done
-	
+
 	echo "==> Checking to see if we have the latest $ISO:"
 	echo "===> Getting signed checksum ($ISO_CHECKSUM)"
 	curl -s -o $ISO_DIR/$ISO_CHECKSUM $MIRROR/$ISO_CHECKSUM
-	
+
 	ISO_NAME=$(echo $ISO | cut -f1 -d'.')
-	
+
 	echo "===> Verifying signed checksum $ISO_CHECKSUM"
 	gpg --verify $ISO_DIR/$ISO_CHECKSUM
-	
+
 	CHECKSUM=$(grep $ISO_NAME $ISO_DIR/$ISO_CHECKSUM | cut -f4 -d' ')
-	
+
 	if [[ $(sha256sum $ISO_DIR/$ISO | cut -f1 -d' ') == "$CHECKSUM" ]]; then
 		echo "===> Checksums match, using local copy of $ISO"
 	else
 		echo "===> Checksums do not match. Fetching latest $ISO"
 		curl -s -o $ISO_DIR/$ISO $MIRROR/$ISO
-		
+
 		echo "===> Verifying sha256 of $ISO"
 		pushd $PWD
 		cd $ISO_DIR
@@ -185,25 +183,25 @@ create_layout() {
 	fi
 	echo "==> Creating $DVD_LAYOUT"
 	mkdir -p $DVD_LAYOUT
-	
+
 	# Check if $MOUNT_POINT is already mounted
 	# This may happen if a previous build failed
 	if grep -q "$MOUNT_POINT" /proc/mounts; then
 		echo "===> Unmounting $MOUNT_POINT from previous build..."
 		umount $MOUNT_POINT
 	fi
-	
+
 	echo "==> Mounting $ISO to $MOUNT_POINT"
 	if [[ ! -d $MOUNT_POINT ]]; then
 		echo "===> Creating $MOUNT_POINT..."
 		mkdir $MOUNT_POINT
 	fi
 	mount $ISO_DIR/$ISO $MOUNT_POINT -o loop
-	
+
 	cp -a $MOUNT_POINT/* $DVD_LAYOUT
-	
+
 	umount $MOUNT_POINT
-	
+
 	echo "==> Finished Populating Layout"
 }
 
@@ -212,7 +210,7 @@ copy_guest_tools() {
 	echo "==> Initiallizing and fetching submodule $GUESTTOOLS"
 	git submodule init
 	git submodule update
-	cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/ 
+	cp -R ./$GUESTTOOLS/ $DVD_LAYOUT/
 }
 
 cleanup_layout() {
@@ -232,9 +230,9 @@ modify_boot_menu() {
 
 create_newiso() {
 	echo "==> Preparing NEW ISO"
-	
+
 	pushd $DVD_LAYOUT > /dev/null 2>&1
-	
+
 	echo "==> Creating NEW ISO"
 	mkisofs -r -R -J -T -v \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
